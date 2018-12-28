@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/juju/errors"
 	"github.com/temoto/vender/hardware/mdb"
@@ -36,6 +37,15 @@ func (self *MoneySystem) Start(ctx context.Context) error {
 		self.cs.Stop(ctx)
 		log.Printf("MoneySystem.Start coin error=%v", errors.ErrorStack(err))
 	}
+
+	go func() {
+		time.Sleep(10 * time.Second)
+		log.Printf("!sim bill pause")
+		self.bs.Stop(ctx)
+		time.Sleep(10 * time.Second)
+		log.Printf("!sim bill unpause")
+		self.bs.Start(ctx, self)
+	}()
 	return nil
 }
 func (self *MoneySystem) Stop(ctx context.Context) error {

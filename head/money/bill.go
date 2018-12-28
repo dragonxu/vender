@@ -18,18 +18,23 @@ type BillState struct {
 
 func (self *BillState) Init(ctx context.Context, parent *MoneySystem, m mdb.Mdber) error {
 	log.Printf("head/money/bill init")
-	self.alive = alive.NewAlive()
-	pch := make(chan money.PollResult, 2)
 	if err := self.hw.Init(ctx, m); err != nil {
 		return err
 	}
-	self.alive.Add(2)
-	go self.hw.Run(ctx, self.alive, pch)
-	go self.pollResultLoop(ctx, parent, pch)
+	self.Start(ctx, parent)
 	return nil
 }
 
+func (self *BillState) Start(ctx context.Context, parent *MoneySystem) {
+	pch := make(chan money.PollResult, 2)
+	self.alive = alive.NewAlive()
+	self.alive.Add(2)
+	go self.hw.Run(ctx, self.alive, pch)
+	go self.pollResultLoop(ctx, parent, pch)
+}
+
 func (self *BillState) Stop(ctx context.Context) {
+	self.hw.CommandBillType(0, 0)
 	self.alive.Stop()
 	self.alive.Wait()
 }
